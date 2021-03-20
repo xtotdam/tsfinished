@@ -1,0 +1,3 @@
+[submodule "matrix-nio-send"]
+	path = matrix-nio-send
+	url = https://github.com/8go/matrix-nio-send

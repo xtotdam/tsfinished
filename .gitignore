@@ -1,0 +1,6 @@
+/err.log
+/out.log
+
+*.pyc
+
+credentials*.json
