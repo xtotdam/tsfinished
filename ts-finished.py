@@ -46,9 +46,7 @@ def transform_range_or_pass(s):
             return s
 
 
-def parse_input(argv):
-    jobid, error, outfile, command = argv
-
+def parse_input(jobid, error, outfile, command):
     # queue length
     jobs_queued = sp.check_output([C['TS'], '-l']).decode('utf-8').count('queued')
 
@@ -59,11 +57,13 @@ def parse_input(argv):
     ### JI:
     # 0 'Environment:'
     # 1 TS_ENV
-    # 2 command         argv[3]
-    # 3 slots
-    # 4 enqueue time
-    # 5 start time
-    # 6 running time
+    # 2 exit status     argv[1]
+    # 3 command         argv[3]
+    # 4 slots
+    # 5 enqueue time
+    # 6 start time
+    # 7 end time
+    # 8 running time
 
     cwd = ji[1]
 
@@ -120,6 +120,10 @@ def send_gmail(creds, subject, message):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Task spooler notifoer')
     parser.add_argument('-n', '--dry-run', action='store_true', help='Send test letter') # true if passed
+    parser.add_argument('jobid', type=str)
+    parser.add_argument('error', type=str)
+    parser.add_argument('outfile', type=str)
+    parser.add_argument('command', type=str)
     args = parser.parse_args()
 
     C = json.load(open('settings.json', 'r'))
@@ -130,8 +134,9 @@ if __name__ == '__main__':
 
     logging.debug(sys.version)
     logging.debug(str(sys.argv))
+    logging.debug(args)
 
-    subject, message = parse_input(sys.argv[1:])
+    subject, message = parse_input(args.jobid, args.error, args.outfile, args.command)
     logging.info(subject)
     logging.info(message)
 
