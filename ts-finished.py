@@ -48,10 +48,17 @@ def transform_range_or_pass(s):
 
 def parse_input(jobid, error, outfile, command):
     # queue length
-    jobs_queued = sp.check_output([C['TS'], '-l']).decode('utf-8').count('queued')
+    try:
+        jobs_queued = sp.check_output([C['TS'], '-l'], timeout=5).decode('utf-8').count('queued')
+    except sp.TimeoutExpired:
+        logging.error('Timeout expired trying to get number of queued jobs')
+
 
     # job info
-    ji = sp.check_output([C['TS'], '-i', jobid]).decode('utf-8').split('\n')
+    try:
+        ji = sp.check_output([C['TS'], '-i', jobid]).decode('utf-8').split('\n')
+    except sp.TimeoutExpired:
+        logging.error('Timeout expired trying to get job information')
     ji = list(filter(bool, ji))
 
     ### JI:
@@ -92,7 +99,7 @@ def parse_input(jobid, error, outfile, command):
     CWD: {cwd}
     {command}
     '''.format(jobid=jobid, error=error, ji=ji.strip(), error_message=error_message,
-        jobs_queued=jobs_queued, cwd=cwd, command=command, hostname=hostname,
+        jobs_queued=jobs_queued, cwd=cwd, command=command, hostname=os.uname()[1],
         s='s' if jobs_queued != 1 else '')
 
     subject = '[TS] finished job {jobid} - {jobs_queued} left - {hostname}'.format(
