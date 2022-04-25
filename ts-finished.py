@@ -65,11 +65,7 @@ def parse_input(argv):
     # 5 start time
     # 6 running time
 
-    if ';' in ji[1]:
-        hostname, cwd = ji[1].split(';')
-    else:
-        cwd = ji[1]
-        hostname = ''
+    cwd = ji[1]
 
     # human readable time
     time = ji[-1].split(': ')[-1][:-1]
@@ -100,7 +96,7 @@ def parse_input(argv):
         s='s' if jobs_queued != 1 else '')
 
     subject = '[TS] finished job {jobid} - {jobs_queued} left - {hostname}'.format(
-        jobid=jobid, jobs_queued=jobs_queued, hostname=hostname)
+        jobid=jobid, jobs_queued=jobs_queued, hostname=os.uname()[1])
 
     return subject, output
 
