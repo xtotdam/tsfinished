@@ -1,11 +1,6 @@
 {
     "TS": "ts",
 
-    "matrix": {
-        "credentials": "credentials-test.json",
-        "obsolete": "true"
-    },
-
     "gmail": {
         "username": "@gmail.com",
         "password": "",
