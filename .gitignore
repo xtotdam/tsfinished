@@ -1,6 +1,6 @@
-/err.log
-/out.log
-
-*.pyc
+__pycache__/
+*.py[cod]
 
 credentials*.json
+/settings.json
+/tsfinished.log
