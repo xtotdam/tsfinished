@@ -54,7 +54,7 @@ def parse_input(jobid, error, outfile, command):
         logging.error('Timeout expired trying to get number of queued jobs')
 
 
-    # job info
+    # get job info
     try:
         ji = sp.check_output([C['TS'], '-i', jobid]).decode('utf-8').split('\n')
     except sp.TimeoutExpired:
@@ -64,19 +64,22 @@ def parse_input(jobid, error, outfile, command):
     ### JI:
     # 0 'Environment:'
     # 1 TS_ENV
-    # 2 exit status     argv[1]
-    # 3 command         argv[3]
-    # 4 slots
-    # 5 enqueue time
-    # 6 start time
-    # 7 end time
-    # 8 running time
+    # 2 command         argv[3]
+    # 3 slots
+    # 4 enqueue time
+    # 5 start time
+    # 6 running time
 
+    # parse job info
     cwd = ji[1]
+    slots_required = ji[3].split(': ')[-1].strip()
+    enqueue_time = ji[4].split(': ')[-1].strip()
+    start_time = ji[5].split(': ')[-1].strip()
+    running_time = ji[6].split(': ')[-1].strip()
+    now_time = datetime.now().strftime("%a %b %d %H:%M:%S %Y")
 
-    # human readable time
-    time = ji[-1].split(': ')[-1][:-1]
-    ji[-1] = ji[-1] + '  ({})'.format(str(timedelta(seconds=float(time))))
+    # human readable running time
+    h_running_time = str(timedelta(seconds=float(running_time[:-1])))
 
     # compress ranges
     cparts = command.split(':::')
@@ -84,25 +87,29 @@ def parse_input(jobid, error, outfile, command):
         cparts[i] = transform_range_or_pass(cparts[i].strip())
     command = ' ::: '.join(cparts)
 
-    ji = '\n'.join(ji[3:])
-
     error_message = ''
     if error != '0':
         error_message = 'Error occured!'
 
     output = '''\
-    Exit status: {error} {error_message}
-    {ji}
-    {jobs_queued} job{s} left
+Enqueue time: {enqueue_time} ({slots_required} slots used)
+Start time: {start_time}
+Finish time: {now_time}
+Running time: {running_time} ({h_running_time})
+{jobs_queued} job{s} left
 
-    Hostname: {hostname}
-    CWD: {cwd}
-    {command}
-    '''.format(jobid=jobid, error=error, ji=ji.strip(), error_message=error_message,
-        jobs_queued=jobs_queued, cwd=cwd, command=command, hostname=os.uname()[1],
-        s='s' if jobs_queued != 1 else '')
+Exit status: {error} {error_message}
 
-    subject = '[TS] finished job {jobid} - {jobs_queued} left - {hostname}'.format(
+Hostname: {hostname}
+CWD: {cwd}
+
+{command}'''.format(error=error, error_message=error_message,
+    jobs_queued=jobs_queued, s='s' if jobs_queued != 1 else '',
+    enqueue_time=enqueue_time, slots_required=slots_required,
+    start_time=start_time, now_time=now_time, running_time=running_time, h_running_time=h_running_time,
+    cwd=cwd, command=command, hostname=os.uname()[1])
+
+    subject = '[TS] finished job #{jobid} - {jobs_queued} left - {hostname}'.format(
         jobid=jobid, jobs_queued=jobs_queued, hostname=os.uname()[1])
 
     return subject, output
