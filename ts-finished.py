@@ -140,7 +140,11 @@ if __name__ == '__main__':
     parser.add_argument('command', type=str)
     args = parser.parse_args()
 
-    C = json.load(open('settings.json', 'r'))
+    try:
+        C = json.load(open('settings.json', 'r'))
+    except FileNotFoundError:
+        logging.error('settings.json not found!')
+        exit()
 
     if args.dry_run:
         send_gmail(C['gmail'], 'subject', 'message')
