@@ -79,7 +79,11 @@ def parse_input(jobid, error, outfile, command):
     now_time = datetime.now().strftime("%a %b %d %H:%M:%S %Y")
 
     # human readable running time
-    h_running_time = str(timedelta(seconds=float(running_time[:-1])))
+    try:
+        h_running_time = str(timedelta(seconds=float(running_time[:-1])))
+    except ValueError:
+        logging.warning('Could not parse running time into human readable form')
+        h_running_time = 'parsing error'
 
     # compress ranges
     cparts = command.split(':::')
@@ -91,23 +95,27 @@ def parse_input(jobid, error, outfile, command):
     if error != '0':
         error_message = 'Error occured!'
 
-    output = '''\
-Enqueue time: {enqueue_time} ({slots_required} slots used)
-Start time: {start_time}
-Finish time: {now_time}
-Running time: {running_time} ({h_running_time})
-{jobs_queued} job{s} left
-
-Exit status: {error} {error_message}
-
-Hostname: {hostname}
-CWD: {cwd}
-
-{command}'''.format(error=error, error_message=error_message,
-    jobs_queued=jobs_queued, s='s' if jobs_queued != 1 else '',
-    enqueue_time=enqueue_time, slots_required=slots_required,
-    start_time=start_time, now_time=now_time, running_time=running_time, h_running_time=h_running_time,
-    cwd=cwd, command=command, hostname=os.uname()[1])
+    output = '\n'.join((
+        'Enqueue time: {enqueue_time} ({slots_required} slots used)',
+        'Start time: {start_time}',
+        'Finish time: {now_time}',
+        'Running time: {running_time} ({h_running_time})',
+        '{jobs_queued} job{s} left',
+        '',
+        'Exit status: {error} {error_message}',
+        '',
+        'Hostname: {hostname}',
+        'CWD: {cwd}',
+        '',
+        '{command}')
+    ).format(
+        error=error, error_message=error_message,
+        jobs_queued=jobs_queued, s='s' if jobs_queued != 1 else '',
+        enqueue_time=enqueue_time, slots_required=slots_required,
+        start_time=start_time, now_time=now_time, running_time=running_time,
+        h_running_time=h_running_time,
+        cwd=cwd, command=command, hostname=os.uname()[1]
+    )
 
     subject = '[TS] finished job #{jobid} - {jobs_queued} left - {hostname}'.format(
         jobid=jobid, jobs_queued=jobs_queued, hostname=os.uname()[1])
